@@ -7,6 +7,7 @@ export const CERT_ISSUE_RESULT_TYPE = 'easy-ca:cert-issue-result';
 export const SEND_CERT_INFO_TYPE = 'easy-ca:send-cert-info';
 export const MOBILE_CHANNEL = 'vn.softdreams.easyca/mobile_channel';
 export const EXIST_WEBVIEW_TYPE = 'easy-ca:exist-webview';
+export const CLOSE_WEBVIEW_TYPE = 'easy-ca:close-webview';
 export const BACK_TO_PREVIOUS_SCREEN_TYPE = 'easy-ca:back-to-previous-screen';
 
 const FLUTTER_BRIDGE_SHIM = `
@@ -155,17 +156,21 @@ export default function CertFlowWebviewModal({ visible, url, onBridgeMessage, on
       const result = message as CertIssueResultMessage;
       setBanner(result);
       onCertIssueResult(result);
+    } else if (message.type === CLOSE_WEBVIEW_TYPE) {
+      if (channel === MOBILE_CHANNEL) {
+        close(`nhan ${CLOSE_WEBVIEW_TYPE} (data=${JSON.stringify(message.data ?? null)}) qua kenh ${channel}`);
+      } else {
+        onWebDebug('warn: close-webview SAI KENH, app khong dong', { channel, data: message.data ?? null }, '');
+      }
     } else if (message.type === EXIST_WEBVIEW_TYPE) {
-      close(`webview gui ${EXIST_WEBVIEW_TYPE}`);
+      onWebDebug('warn: nhan exist-webview cua V1, app V3 khong dong', { channel, data: message.data ?? null }, '');
     }
   };
 
   const handleNavigation = (navState: WebViewNavigation) => {
     onWebDebug(`navigation${navState.loading ? ' (loading)' : ''}`, navState.url, navState.url);
-    if (navState.url.endsWith('#success')) {
-      close('webview ket thuc voi #success');
-    } else if (navState.url.endsWith('#cancel')) {
-      close('webview ket thuc voi #cancel');
+    if (navState.url.endsWith('#success') || navState.url.endsWith('#cancel')) {
+      onWebDebug('warn: web chi doi hash, app khong dong theo URL', navState.url, navState.url);
     }
   };
 
